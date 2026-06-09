@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { Pencil, Sparkles, Loader2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
@@ -9,9 +9,12 @@ import { Button } from "@/components/Button";
 import { UploadDropzone } from "@/components/UploadDropzone";
 import { useSelectedStyle } from "@/lib/useSelectedStyle";
 import { redesignRoom } from "@/lib/api";
+import { useDictionary } from "@/components/DictionaryProvider";
 
 export default function UploadPage() {
   const router = useRouter();
+  const { locale } = useParams<{ locale: string }>();
+  const { dict } = useDictionary();
   const { style } = useSelectedStyle();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -25,13 +28,12 @@ export default function UploadPage() {
     try {
       const result = await redesignRoom(file, style.id);
 
-      // Save result to sessionStorage so the result page can access it
       sessionStorage.setItem(`design_${result.design_id}`, JSON.stringify({
         ...result,
         original_preview: URL.createObjectURL(file),
       }));
 
-      router.push(`/design/${result.design_id}?style=${style.id}`);
+      router.push(`/${locale}/design/${result.design_id}?style=${style.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setLoading(false);
@@ -42,7 +44,7 @@ export default function UploadPage() {
     <AppShell>
       <div className="mb-4 flex justify-end">
         <Link
-          href="/style"
+          href={`/${locale}/style`}
           className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm font-semibold text-white shadow-md shadow-coral/30"
         >
           <Pencil size={14} />
@@ -50,13 +52,16 @@ export default function UploadPage() {
         </Link>
       </div>
 
-      <h1 className="text-3xl font-bold tracking-tight">Upload Room</h1>
-      <p className="mt-2 text-muted">
-        Let our AI analyze your space and apply the selected style.
-      </p>
+      <h1 className="text-3xl font-bold tracking-tight">{dict.upload.title}</h1>
+      <p className="mt-2 text-muted">{dict.upload.subtitle}</p>
 
       <div className="mt-6">
-        <UploadDropzone onFile={setFile} disabled={loading} />
+        <UploadDropzone
+          onFile={setFile}
+          disabled={loading}
+          title={dict.upload.dropzoneTitle}
+          hint={dict.upload.dropzoneHint}
+        />
       </div>
 
       {error && (
@@ -70,19 +75,17 @@ export default function UploadPage() {
           {loading ? (
             <>
               <Loader2 size={18} className="animate-spin" />
-              Analyzing your room...
+              {dict.upload.ctaLoading}
             </>
           ) : (
             <>
               <Sparkles size={18} />
-              Redesign My Room
+              {dict.upload.cta}
             </>
           )}
         </Button>
         {!file && !loading && (
-          <p className="mt-2 text-center text-xs text-muted">
-            Upload a photo to start
-          </p>
+          <p className="mt-2 text-center text-xs text-muted">{dict.upload.hint}</p>
         )}
       </div>
     </AppShell>

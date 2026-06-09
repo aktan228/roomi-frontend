@@ -6,9 +6,13 @@ import { Camera, X } from "lucide-react";
 export function UploadDropzone({
   onFile,
   disabled = false,
+  title = "Upload your room photo",
+  hint = "Tap to browse or drag and drop",
 }: {
   onFile?: (file: File | null) => void;
   disabled?: boolean;
+  title?: string;
+  hint?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -75,8 +79,8 @@ export function UploadDropzone({
           <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-coral-light">
             <Camera className="text-coral" size={28} />
           </div>
-          <p className="text-lg font-semibold">Upload your room photo</p>
-          <p className="mt-1 text-sm text-muted">Tap to browse or drag and drop</p>
+          <p className="text-lg font-semibold">{title}</p>
+          <p className="mt-1 text-sm text-muted">{hint}</p>
         </>
       )}
     </div>

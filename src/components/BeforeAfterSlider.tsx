@@ -5,9 +5,13 @@ import { useRef, useState } from "react";
 export function BeforeAfterSlider({
   before,
   after,
+  labelBefore = "Before",
+  labelAfter = "After",
 }: {
   before: string;
   after: string;
+  labelBefore?: string;
+  labelAfter?: string;
 }) {
   const [pos, setPos] = useState(50); // percentage
   const containerRef = useRef<HTMLDivElement>(null);
@@ -55,8 +59,8 @@ export function BeforeAfterSlider({
       </div>
 
       {/* Labels */}
-      <span className="absolute bottom-3 left-3 rounded-full bg-black/50 px-2 py-0.5 text-xs font-semibold text-white backdrop-blur">Before</span>
-      <span className="absolute bottom-3 right-3 rounded-full bg-coral/80 px-2 py-0.5 text-xs font-semibold text-white backdrop-blur">After</span>
+      <span className="absolute bottom-3 left-3 rounded-full bg-black/50 px-2 py-0.5 text-xs font-semibold text-white backdrop-blur">{labelBefore}</span>
+      <span className="absolute bottom-3 right-3 rounded-full bg-coral/80 px-2 py-0.5 text-xs font-semibold text-white backdrop-blur">{labelAfter}</span>
     </div>
   );
 }
