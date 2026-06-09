@@ -1,12 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Send, Sparkles, User, Loader2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Send, Sparkles, User, Loader2, Plus, History, Trash2, X } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { Markdown } from "@/components/Markdown";
 import { useDictionary } from "@/components/DictionaryProvider";
 import { sendChat } from "@/lib/api";
+import { buildChatContext } from "@/lib/chat-context";
+import {
+  loadConversations,
+  saveConversation,
+  deleteConversation,
+  createConversation,
+  titleFrom,
+  type Conversation,
+} from "@/lib/chat-store";
+import { formatDate } from "@/lib/gallery";
 
-type Message = { role: "user" | "assistant"; content: string; pending?: boolean };
+type UiMessage = { role: "user" | "assistant"; content: string; pending?: boolean };
 
 const SUGGESTIONS = {
   ru: [
@@ -25,52 +37,95 @@ const SUGGESTIONS = {
 
 export default function ChatPage() {
   const { dict, locale } = useDictionary();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const searchParams = useSearchParams();
+  const designId = searchParams.get("designId") ?? undefined;
+  const styleParam = searchParams.get("style") ?? undefined;
+
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [active, setActive] = useState<Conversation>(() => createConversation());
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const suggestions = SUGGESTIONS[locale as keyof typeof SUGGESTIONS] ?? SUGGESTIONS.en;
 
   useEffect(() => {
+    setConversations(loadConversations());
+  }, []);
+
+  const messages: UiMessage[] = useMemo(() => {
+    const base: UiMessage[] = active.messages.map((m) => ({ role: m.role, content: m.content }));
+    if (pending) base.push({ role: "assistant", content: "", pending: true });
+    return base;
+  }, [active.messages, pending]);
+
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages.length, pending]);
+
+  function newChat() {
+    setActive(createConversation());
+    setHistoryOpen(false);
+    setInput("");
+  }
+
+  function openConversation(c: Conversation) {
+    setActive(c);
+    setHistoryOpen(false);
+  }
+
+  function removeConversation(id: string, e: React.MouseEvent) {
+    e.stopPropagation();
+    const next = deleteConversation(id);
+    setConversations(next);
+    if (id === active.id) setActive(createConversation());
+  }
 
   async function send(text: string) {
     const trimmed = text.trim();
     if (!trimmed || loading) return;
 
-    const userMsg: Message = { role: "user", content: trimmed };
-    const pendingMsg: Message = { role: "assistant", content: "", pending: true };
+    const now = Date.now();
+    const history = active.messages.map((m) => ({ role: m.role, content: m.content }));
+    const conv: Conversation = {
+      ...active,
+      title: active.title || titleFrom(trimmed),
+      messages: [...active.messages, { role: "user", content: trimmed }],
+      updatedAt: now,
+    };
 
-    setMessages((prev) => [...prev, userMsg, pendingMsg]);
+    setActive(conv);
     setInput("");
     setLoading(true);
+    setPending(true);
 
     try {
-      const history = messages.map((m) => ({ role: m.role, content: m.content }));
-      const result = await sendChat(trimmed, history);
-
-      setMessages((prev) => {
-        const next = [...prev];
-        next[next.length - 1] = { role: "assistant", content: result.reply };
-        return next;
-      });
+      const result = await sendChat(trimmed, history, buildChatContext({ designId, style: styleParam }));
+      finish(conv, result.reply);
     } catch {
-      setMessages((prev) => {
-        const next = [...prev];
-        next[next.length - 1] = {
-          role: "assistant",
-          content: locale === "ru"
-            ? "Извините, не удалось получить ответ. Попробуйте ещё раз."
-            : "Sorry, couldn't get a response. Please try again.",
-        };
-        return next;
-      });
-    } finally {
-      setLoading(false);
+      finish(
+        conv,
+        locale === "ru"
+          ? "Извините, не удалось получить ответ. Попробуйте ещё раз."
+          : "Sorry, couldn't get a response. Please try again.",
+      );
     }
+  }
+
+  function finish(conv: Conversation, reply: string) {
+    const updated: Conversation = {
+      ...conv,
+      messages: [...conv.messages, { role: "assistant", content: reply }],
+      updatedAt: Date.now(),
+    };
+    setActive(updated);
+    setConversations(saveConversation(updated));
+    setPending(false);
+    setLoading(false);
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -84,9 +139,25 @@ export default function ChatPage() {
     <AppShell noPadding>
       <div className="flex h-[calc(100dvh-4rem-5rem)] flex-col">
         {/* Header */}
-        <div className="border-b border-border px-5 py-4">
-          <h1 className="text-2xl font-bold tracking-tight">{dict.chat.title}</h1>
-          <p className="mt-0.5 text-sm text-muted">{dict.chat.subtitle}</p>
+        <div className="flex items-center gap-2 border-b border-border px-5 py-4">
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold tracking-tight">{dict.chat.title}</h1>
+            <p className="mt-0.5 text-sm text-muted">{dict.chat.subtitle}</p>
+          </div>
+          <button
+            onClick={newChat}
+            aria-label={dict.chat.newChat}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted transition hover:border-coral hover:text-coral"
+          >
+            <Plus size={18} />
+          </button>
+          <button
+            onClick={() => setHistoryOpen(true)}
+            aria-label={dict.chat.historyTitle}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted transition hover:border-coral hover:text-coral"
+          >
+            <History size={18} />
+          </button>
         </div>
 
         {/* Messages */}
@@ -103,7 +174,6 @@ export default function ChatPage() {
                 {locale === "ru" ? "Советы по стилю, бюджету и ремонту" : "Tips on style, budget and renovation"}
               </p>
 
-              {/* Suggestion chips */}
               <div className="mt-5 flex flex-col gap-2 w-full">
                 {suggestions.map((s) => (
                   <button
@@ -123,7 +193,6 @@ export default function ChatPage() {
               key={i}
               className={`flex gap-2 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
             >
-              {/* Avatar */}
               <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-white ${
                 msg.role === "user" ? "bg-coral" : "bg-foreground/10"
               }`}>
@@ -133,7 +202,6 @@ export default function ChatPage() {
                 }
               </div>
 
-              {/* Bubble */}
               <div className={`max-w-[78%] rounded-3xl px-4 py-3 text-sm leading-relaxed ${
                 msg.role === "user"
                   ? "bg-coral text-white rounded-tr-sm"
@@ -145,6 +213,8 @@ export default function ChatPage() {
                     <span className="h-2 w-2 rounded-full bg-muted animate-bounce [animation-delay:150ms]" />
                     <span className="h-2 w-2 rounded-full bg-muted animate-bounce [animation-delay:300ms]" />
                   </div>
+                ) : msg.role === "assistant" ? (
+                  <Markdown content={msg.content} />
                 ) : (
                   msg.content
                 )}
@@ -188,6 +258,66 @@ export default function ChatPage() {
           </p>
         </div>
       </div>
+
+      {/* History panel */}
+      {historyOpen && (
+        <div className="fixed inset-0 z-40 mx-auto w-full max-w-md">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setHistoryOpen(false)}
+          />
+          <div className="absolute right-0 top-0 flex h-full w-72 flex-col border-l border-border bg-background shadow-xl">
+            <div className="flex items-center justify-between border-b border-border px-4 py-4">
+              <span className="text-sm font-bold">{dict.chat.historyTitle}</span>
+              <button
+                onClick={() => setHistoryOpen(false)}
+                aria-label="Close"
+                className="text-muted transition hover:text-foreground"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <button
+              onClick={newChat}
+              className="flex items-center gap-2 border-b border-border px-4 py-3 text-sm font-semibold text-coral transition hover:bg-coral/5"
+            >
+              <Plus size={16} /> {dict.chat.newChat}
+            </button>
+
+            <div className="flex-1 overflow-y-auto">
+              {conversations.length === 0 ? (
+                <p className="px-4 py-6 text-center text-xs text-muted">{dict.chat.noHistory}</p>
+              ) : (
+                conversations.map((c) => (
+                  <div
+                    key={c.id}
+                    onClick={() => openConversation(c)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === "Enter" && openConversation(c)}
+                    className={`group flex cursor-pointer items-center gap-2 border-b border-border px-4 py-3 transition hover:bg-card/60 ${
+                      c.id === active.id ? "bg-coral/5" : ""
+                    }`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{c.title || "—"}</p>
+                      <p className="mt-0.5 text-[11px] text-muted">{formatDate(c.updatedAt, locale)}</p>
+                    </div>
+                    <button
+                      onClick={(e) => removeConversation(c.id, e)}
+                      aria-label="Delete"
+                      className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-muted opacity-0 transition group-hover:opacity-100 hover:bg-red-500 hover:text-white"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

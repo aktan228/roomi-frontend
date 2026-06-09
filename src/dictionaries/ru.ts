@@ -11,9 +11,13 @@ export type Dictionary = {
   result: {
     title: string; mockNotice: string; shoppingList: string; renoPlan: string;
     totalBudget: string; buy: string; weeksTotal: string; week: string;
+    askAi: string;
   };
   gallery: { title: string; subtitle: string; empty: string; emptyHint: string };
-  chat: { title: string; subtitle: string; placeholder: string; send: string };
+  chat: {
+    title: string; subtitle: string; placeholder: string; send: string;
+    newChat: string; historyTitle: string; noHistory: string;
+  };
   profile: {
     title: string; subtitle: string;
     designs: string; plan: string; free: string; premium: string;
@@ -59,6 +63,7 @@ const ru: Dictionary = {
     buy: "Купить",
     weeksTotal: "нед. всего",
     week: "Неделя",
+    askAi: "Спросить AI об этом дизайне",
   },
   gallery: {
     title: "Галерея",
@@ -71,6 +76,9 @@ const ru: Dictionary = {
     subtitle: "Задайте любой вопрос о ремонте.",
     placeholder: "Спросите что-нибудь...",
     send: "Отправить",
+    newChat: "Новый чат",
+    historyTitle: "История бесед",
+    noHistory: "Пока нет бесед",
   },
   profile: {
     title: "Профиль",

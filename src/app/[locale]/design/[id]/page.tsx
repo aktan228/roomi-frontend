@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useSearchParams } from "next/navigation";
-import { ShoppingBag, CalendarDays, Loader2, ExternalLink } from "lucide-react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { ShoppingBag, CalendarDays, Loader2, ExternalLink, MessageSquare } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { BeforeAfterSlider } from "@/components/BeforeAfterSlider";
 import { useDictionary } from "@/components/DictionaryProvider";
@@ -13,7 +13,8 @@ import { saveToGallery } from "@/lib/gallery";
 type Tab = "products" | "plan";
 
 export default function DesignResultPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id, locale } = useParams<{ id: string; locale: string }>();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const style = searchParams.get("style") ?? "minimal";
   const { dict } = useDictionary();
@@ -73,6 +74,14 @@ export default function DesignResultPage() {
           <p className="mt-2 text-center text-xs text-muted">{dict.result.mockNotice}</p>
         )}
       </div>
+
+      {/* Ask AI about this design */}
+      <button
+        onClick={() => router.push(`/${locale}/chat?designId=${id}&style=${style}`)}
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-coral/30 bg-coral/5 py-3 text-sm font-semibold text-coral transition hover:bg-coral/10"
+      >
+        <MessageSquare size={16} /> {dict.result.askAi}
+      </button>
 
       {/* Tab switcher */}
       <div className="mt-6 flex rounded-2xl bg-card p-1">

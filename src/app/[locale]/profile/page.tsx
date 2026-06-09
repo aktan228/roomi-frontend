@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useDictionary } from "@/components/DictionaryProvider";
+import { useToast } from "@/components/Toast";
 import { loadGallery } from "@/lib/gallery";
 
 type Budget = "economy" | "medium" | "premium";
@@ -17,6 +18,7 @@ const BUDGET_KEY = "roomi.budget";
 export default function ProfilePage() {
   const { dict, locale } = useDictionary();
   const router = useRouter();
+  const { show, toast } = useToast();
   const [designCount, setDesignCount] = useState(0);
   const [budget, setBudget] = useState<Budget>("medium");
 
@@ -55,7 +57,10 @@ export default function ProfilePage() {
           <p className="text-lg font-bold">Aktan</p>
           <p className="text-sm text-muted">aktan@roomi.ai</p>
         </div>
-        <button className="rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-muted transition hover:border-coral hover:text-coral">
+        <button
+          onClick={() => show(dict.common.comingSoon)}
+          className="rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-muted transition hover:border-coral hover:text-coral"
+        >
           {dict.profile.editProfile}
         </button>
       </div>
@@ -79,7 +84,10 @@ export default function ProfilePage() {
           <span className="font-bold text-sm">{dict.profile.premium}</span>
         </div>
         <p className="text-xs text-white/70 mb-4">{dict.profile.upgradeDesc}</p>
-        <button className="w-full rounded-2xl bg-white py-2.5 text-sm font-bold text-[#1a1a2e] transition active:scale-[0.99]">
+        <button
+          onClick={() => show(dict.common.comingSoon)}
+          className="w-full rounded-2xl bg-white py-2.5 text-sm font-bold text-[#1a1a2e] transition active:scale-[0.99]"
+        >
           {dict.profile.upgradeCta}
         </button>
       </div>
@@ -154,18 +162,26 @@ export default function ProfilePage() {
             <span className="flex-1 text-sm">{dict.profile.version}</span>
             <span className="text-xs text-muted">0.1.0 MVP</span>
           </div>
-          <button className="flex w-full items-center gap-3 px-4 py-4 transition hover:bg-card/80">
+          <button
+            onClick={() => show(dict.common.comingSoon)}
+            className="flex w-full items-center gap-3 px-4 py-4 transition hover:bg-card/80"
+          >
             <MessageSquare size={18} className="text-muted" />
             <span className="flex-1 text-left text-sm">{dict.profile.feedback}</span>
             <ChevronRight size={16} className="text-muted" />
           </button>
-          <button className="flex w-full items-center gap-3 px-4 py-4 transition hover:bg-card/80">
+          <button
+            onClick={() => show(dict.common.comingSoon)}
+            className="flex w-full items-center gap-3 px-4 py-4 transition hover:bg-card/80"
+          >
             <Sparkles size={18} className="text-coral" />
             <span className="flex-1 text-left text-sm font-semibold text-coral">roomi.ai</span>
             <span className="text-xs text-muted">AI Interior Design</span>
           </button>
         </div>
       </div>
+
+      {toast}
     </AppShell>
   );
 }

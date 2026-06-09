@@ -33,6 +33,7 @@ const en: Dictionary = {
     buy: "Buy",
     weeksTotal: "weeks total",
     week: "Week",
+    askAi: "Ask AI about this design",
   },
   gallery: {
     title: "Gallery",
@@ -45,6 +46,9 @@ const en: Dictionary = {
     subtitle: "Ask anything about your renovation.",
     placeholder: "Ask something...",
     send: "Send",
+    newChat: "New chat",
+    historyTitle: "Conversation history",
+    noHistory: "No conversations yet",
   },
   profile: {
     title: "Profile",
