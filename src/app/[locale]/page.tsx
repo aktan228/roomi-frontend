@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, ChevronDown, Check } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/Button";
 import { UploadDropzone } from "@/components/UploadDropzone";
@@ -14,22 +14,28 @@ import { useDictionary } from "@/components/DictionaryProvider";
 // Room types
 const ROOM_TYPES = {
   ru: [
-    { id: "bedroom",     label: "Спальня" },
     { id: "living_room", label: "Гостиная" },
-    { id: "kitchen",     label: "Кухня" },
-    { id: "bathroom",    label: "Ванная" },
-    { id: "nursery",     label: "Детская" },
-    { id: "office",      label: "Офис" },
     { id: "dining_room", label: "Столовая" },
+    { id: "bedroom",     label: "Спальня" },
+    { id: "bathroom",    label: "Ванная" },
+    { id: "office",      label: "Офис" },
+    { id: "kitchen",     label: "Кухня" },
+    { id: "nursery",     label: "Детская" },
+    { id: "basement",    label: "Подвал" },
+    { id: "balcony",     label: "Балкон / лоджия" },
+    { id: "gaming_room", label: "Игровая комната" },
   ],
   en: [
-    { id: "bedroom",     label: "Bedroom" },
     { id: "living_room", label: "Living room" },
-    { id: "kitchen",     label: "Kitchen" },
-    { id: "bathroom",    label: "Bathroom" },
-    { id: "nursery",     label: "Nursery" },
-    { id: "office",      label: "Office" },
     { id: "dining_room", label: "Dining room" },
+    { id: "bedroom",     label: "Bedroom" },
+    { id: "bathroom",    label: "Bathroom" },
+    { id: "office",      label: "Office" },
+    { id: "kitchen",     label: "Kitchen" },
+    { id: "nursery",     label: "Nursery" },
+    { id: "basement",    label: "Basement" },
+    { id: "balcony",     label: "Outdoor Patio" },
+    { id: "gaming_room", label: "Gaming Room" },
   ],
 };
 
@@ -63,6 +69,19 @@ export default function UploadPage() {
   const { locale } = useParams<{ locale: string }>();
   const { dict } = useDictionary();
   const { style, setStyle } = useSelectedStyle();
+
+  const [roomTypeOpen, setRoomTypeOpen] = useState(false);
+  const roomTypeRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (roomTypeRef.current && !roomTypeRef.current.contains(e.target as Node)) {
+        setRoomTypeOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -129,23 +148,33 @@ export default function UploadPage() {
       <h1 className="text-3xl font-bold tracking-tight">{dict.upload.title}</h1>
       <p className="mt-1 text-sm text-muted">{dict.upload.subtitle}</p>
 
-      {/* Room type chips */}
-      <div className="mt-5">
-        <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
-          {roomTypes.map((rt) => (
-            <button
-              key={rt.id}
-              onClick={() => setRoomType(rt.id)}
-              className={`flex-shrink-0 rounded-full px-3.5 py-1.5 text-sm font-semibold transition ${
-                roomType === rt.id
-                  ? "bg-coral text-white shadow-sm shadow-coral/30"
-                  : "border border-border bg-card/50 text-muted hover:border-coral/50"
-              }`}
-            >
-              {rt.label}
-            </button>
-          ))}
-        </div>
+      {/* Room type dropdown */}
+      <div className="mt-5" ref={roomTypeRef}>
+        <button
+          onClick={() => setRoomTypeOpen((v) => !v)}
+          className="flex w-full items-center justify-between rounded-2xl border border-border bg-card/50 px-4 py-3 text-sm font-semibold transition hover:border-coral/60 focus:outline-none"
+        >
+          <span>{roomTypes.find((rt) => rt.id === roomType)?.label ?? roomTypes[0].label}</span>
+          <ChevronDown
+            size={18}
+            className={`text-muted transition-transform duration-200 ${roomTypeOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+
+        {roomTypeOpen && (
+          <div className="mt-1 overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
+            {roomTypes.map((rt) => (
+              <button
+                key={rt.id}
+                onClick={() => { setRoomType(rt.id); setRoomTypeOpen(false); }}
+                className="flex w-full items-center justify-between px-4 py-3 text-sm transition hover:bg-coral/10 active:bg-coral/20"
+              >
+                <span className={rt.id === roomType ? "font-semibold text-coral" : ""}>{rt.label}</span>
+                {rt.id === roomType && <Check size={16} className="text-coral" />}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Upload + sample rooms */}
