@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Comfortaa } from "next/font/google";
 import "../globals.css";
 import { isValidLocale, DEFAULT_LOCALE, type Locale } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n";
 import { DictionaryProvider } from "@/components/DictionaryProvider";
 
-const inter = Inter({
+const comfortaa = Comfortaa({
   variable: "--font-sans",
   subsets: ["latin", "cyrillic"],
   display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -36,7 +37,7 @@ export default async function LocaleLayout({
   const dict = await getDictionary(locale);
 
   return (
-    <html lang={locale} className={`${inter.variable} h-full`}>
+    <html lang={locale} className={`${comfortaa.variable} h-full`}>
       <body className="min-h-full bg-background text-foreground">
         <DictionaryProvider dict={dict} locale={locale}>
           {children}
