@@ -2,21 +2,21 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Send, Sparkles, User, Loader2, Plus, History, Trash2, X } from "lucide-react";
+import {
+  Send, Sparkles, User, Loader2, Plus, History,
+  Trash2, X, ImageIcon,
+} from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Markdown } from "@/components/Markdown";
 import { useDictionary } from "@/components/DictionaryProvider";
 import { sendChat } from "@/lib/api";
 import { buildChatContext } from "@/lib/chat-context";
+import { STYLES } from "@/lib/styles";
 import {
-  loadConversations,
-  saveConversation,
-  deleteConversation,
-  createConversation,
-  titleFrom,
-  type Conversation,
+  loadConversations, saveConversation, deleteConversation,
+  createConversation, titleFrom, type Conversation,
 } from "@/lib/chat-store";
-import { formatDate } from "@/lib/gallery";
+import { loadGallery, formatDate, type GalleryItem } from "@/lib/gallery";
 
 type UiMessage = { role: "user" | "assistant"; content: string; pending?: boolean };
 
@@ -35,11 +35,36 @@ const SUGGESTIONS = {
   ],
 };
 
+const DESIGN_SUGGESTIONS = {
+  ru: [
+    "Что можно улучшить в этом дизайне?",
+    "Сколько будет стоить воплотить этот стиль?",
+    "Какую мебель посоветуешь для этого интерьера?",
+    "Какие материалы лучше выбрать?",
+  ],
+  en: [
+    "What could be improved in this design?",
+    "How much would it cost to achieve this style?",
+    "What furniture would work best here?",
+    "What materials would you recommend?",
+  ],
+};
+
+function styleLabel(styleId: string) {
+  return STYLES.find((s) => s.id === styleId)?.name ?? styleId;
+}
+
 export default function ChatPage() {
   const { dict, locale } = useDictionary();
   const searchParams = useSearchParams();
-  const designId = searchParams.get("designId") ?? undefined;
-  const styleParam = searchParams.get("style") ?? undefined;
+
+  // Linked design (from deep-link or picker)
+  const [linkedDesignId, setLinkedDesignId] = useState<string | null>(
+    searchParams.get("designId"),
+  );
+  const [linkedStyle, setLinkedStyle] = useState<string | null>(
+    searchParams.get("style"),
+  );
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [active, setActive] = useState<Conversation>(() => createConversation());
@@ -47,14 +72,20 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [pending, setPending] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [designPickerOpen, setDesignPickerOpen] = useState(false);
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const suggestions = SUGGESTIONS[locale as keyof typeof SUGGESTIONS] ?? SUGGESTIONS.en;
+  const suggestions =
+    linkedDesignId
+      ? (DESIGN_SUGGESTIONS[locale as keyof typeof DESIGN_SUGGESTIONS] ?? DESIGN_SUGGESTIONS.en)
+      : (SUGGESTIONS[locale as keyof typeof SUGGESTIONS] ?? SUGGESTIONS.en);
 
   useEffect(() => {
     setConversations(loadConversations());
+    setGalleryItems(loadGallery());
   }, []);
 
   const messages: UiMessage[] = useMemo(() => {
@@ -85,6 +116,17 @@ export default function ChatPage() {
     if (id === active.id) setActive(createConversation());
   }
 
+  function linkDesign(item: GalleryItem) {
+    setLinkedDesignId(item.id);
+    setLinkedStyle(item.style);
+    setDesignPickerOpen(false);
+  }
+
+  function unlinkDesign() {
+    setLinkedDesignId(null);
+    setLinkedStyle(null);
+  }
+
   async function send(text: string) {
     const trimmed = text.trim();
     if (!trimmed || loading) return;
@@ -104,7 +146,14 @@ export default function ChatPage() {
     setPending(true);
 
     try {
-      const result = await sendChat(trimmed, history, buildChatContext({ designId, style: styleParam }));
+      const result = await sendChat(
+        trimmed,
+        history,
+        buildChatContext({
+          designId: linkedDesignId ?? undefined,
+          style: linkedStyle ?? undefined,
+        }),
+      );
       finish(conv, result.reply);
     } catch {
       finish(
@@ -135,10 +184,15 @@ export default function ChatPage() {
     }
   }
 
+  const linkedItem = linkedDesignId
+    ? galleryItems.find((g) => g.id === linkedDesignId)
+    : null;
+
   return (
     <AppShell noPadding>
       <div className="flex h-[calc(100dvh-4rem-5rem)] flex-col">
-        {/* Header */}
+
+        {/* Chat header */}
         <div className="flex items-center gap-2 border-b border-border px-5 py-4">
           <div className="flex-1">
             <h1 className="text-2xl font-bold tracking-tight">{dict.chat.title}</h1>
@@ -160,6 +214,35 @@ export default function ChatPage() {
           </button>
         </div>
 
+        {/* Linked design banner */}
+        {linkedDesignId && (
+          <div className="flex items-center gap-3 border-b border-coral/20 bg-coral/5 px-4 py-2.5">
+            {linkedItem ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={linkedItem.resultUrl}
+                alt=""
+                className="h-10 w-10 flex-shrink-0 rounded-xl object-cover ring-1 ring-coral/30"
+              />
+            ) : (
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-coral/10">
+                <ImageIcon size={16} className="text-coral" />
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-coral">{dict.chat.linkedDesignLabel}</p>
+              <p className="truncate text-[11px] text-muted">{styleLabel(linkedStyle ?? "")}</p>
+            </div>
+            <button
+              onClick={unlinkDesign}
+              aria-label="Remove link"
+              className="flex-shrink-0 text-muted transition hover:text-coral"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
           {messages.length === 0 && (
@@ -168,7 +251,10 @@ export default function ChatPage() {
                 <Sparkles className="text-coral" size={28} />
               </div>
               <p className="text-center text-sm font-semibold">
-                {locale === "ru" ? "Спросите AI о дизайне вашей комнаты" : "Ask AI about your room design"}
+                {linkedDesignId
+                  ? (locale === "ru" ? "Спросите AI об этом дизайне" : "Ask AI about this design")
+                  : (locale === "ru" ? "Спросите AI о дизайне вашей комнаты" : "Ask AI about your room design")
+                }
               </p>
               <p className="text-center text-xs text-muted mt-1">
                 {locale === "ru" ? "Советы по стилю, бюджету и ремонту" : "Tips on style, budget and renovation"}
@@ -193,7 +279,7 @@ export default function ChatPage() {
               key={i}
               className={`flex gap-2 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
             >
-              <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-white ${
+              <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${
                 msg.role === "user" ? "bg-coral" : "bg-foreground/10"
               }`}>
                 {msg.role === "user"
@@ -224,9 +310,57 @@ export default function ChatPage() {
           <div ref={bottomRef} />
         </div>
 
+        {/* Design picker panel */}
+        {designPickerOpen && (
+          <div className="border-t border-border bg-background px-4 py-3">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs font-semibold text-muted">
+                {dict.chat.linkDesign}
+              </p>
+              <button onClick={() => setDesignPickerOpen(false)}>
+                <X size={15} className="text-muted" />
+              </button>
+            </div>
+            {galleryItems.length === 0 ? (
+              <p className="py-2 text-xs text-muted">{dict.chat.noDesigns}</p>
+            ) : (
+              <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
+                {galleryItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => linkDesign(item)}
+                    className={`flex-shrink-0 overflow-hidden rounded-2xl ring-2 transition ${
+                      linkedDesignId === item.id ? "ring-coral" : "ring-transparent hover:ring-coral/40"
+                    }`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={item.resultUrl}
+                      alt={styleLabel(item.style)}
+                      className="h-16 w-16 object-cover"
+                    />
+                    <p className="pb-1 text-center text-[10px] text-muted">{styleLabel(item.style)}</p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Input */}
         <div className="border-t border-border bg-background px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-          <div className="flex items-end gap-2 rounded-3xl border border-border bg-card/50 px-4 py-2 focus-within:border-coral transition">
+          <div className="flex items-end gap-2 rounded-3xl border border-border bg-card/50 px-3 py-2 focus-within:border-coral transition">
+            {/* Attach design button */}
+            <button
+              onClick={() => setDesignPickerOpen((p) => !p)}
+              aria-label={dict.chat.linkDesign}
+              className={`mb-1 flex-shrink-0 transition ${
+                linkedDesignId ? "text-coral" : "text-muted hover:text-coral"
+              }`}
+            >
+              <ImageIcon size={18} />
+            </button>
+
             <textarea
               ref={inputRef}
               value={input}
@@ -269,11 +403,7 @@ export default function ChatPage() {
           <div className="absolute right-0 top-0 flex h-full w-72 flex-col border-l border-border bg-background shadow-xl">
             <div className="flex items-center justify-between border-b border-border px-4 py-4">
               <span className="text-sm font-bold">{dict.chat.historyTitle}</span>
-              <button
-                onClick={() => setHistoryOpen(false)}
-                aria-label="Close"
-                className="text-muted transition hover:text-foreground"
-              >
+              <button onClick={() => setHistoryOpen(false)} aria-label="Close" className="text-muted transition hover:text-foreground">
                 <X size={18} />
               </button>
             </div>

@@ -54,6 +54,9 @@ const en: Dictionary = {
     newChat: "New chat",
     historyTitle: "Conversation history",
     noHistory: "No conversations yet",
+    linkDesign: "Attach design",
+    noDesigns: "No designs yet — create one first",
+    linkedDesignLabel: "Discussing design",
   },
   profile: {
     title: "Profile",

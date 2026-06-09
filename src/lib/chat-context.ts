@@ -8,12 +8,17 @@ export function buildChatContext(opts?: { designId?: string; style?: string }): 
 
   const style = opts?.style ?? getStoredStyle().id;
   const budget = window.localStorage.getItem(BUDGET_KEY);
-  const lastDesign = opts?.designId ?? loadGallery()[0]?.id;
 
   const parts: string[] = [];
   if (style) parts.push(`Style: ${style}.`);
   if (budget) parts.push(`Budget: ${budget}.`);
-  if (lastDesign) parts.push(`Last design: ${lastDesign}.`);
+
+  if (opts?.designId) {
+    parts.push(`The user is discussing a specific room redesign (ID: ${opts.designId}, style: ${style}). Focus your advice on this design.`);
+  } else {
+    const lastDesign = loadGallery()[0]?.id;
+    if (lastDesign) parts.push(`Last design: ${lastDesign}.`);
+  }
 
   return parts.length ? parts.join(" ") : undefined;
 }

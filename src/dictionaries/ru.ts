@@ -19,6 +19,7 @@ export type Dictionary = {
   chat: {
     title: string; subtitle: string; placeholder: string; send: string;
     newChat: string; historyTitle: string; noHistory: string;
+    linkDesign: string; noDesigns: string; linkedDesignLabel: string;
   };
   profile: {
     title: string; subtitle: string;
@@ -86,6 +87,9 @@ const ru: Dictionary = {
     newChat: "Новый чат",
     historyTitle: "История бесед",
     noHistory: "Пока нет бесед",
+    linkDesign: "Привязать дизайн",
+    noDesigns: "Нет дизайнов — создайте первый",
+    linkedDesignLabel: "Обсуждаем дизайн",
   },
   profile: {
     title: "Профиль",

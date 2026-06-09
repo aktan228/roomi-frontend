@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Sparkles, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/Button";
 import { UploadDropzone } from "@/components/UploadDropzone";
@@ -71,7 +71,6 @@ export default function UploadPage() {
   const [loading, setLoading] = useState(false);
   const [sampleLoading, setSampleLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [prefsOpen, setPrefsOpen] = useState(false);
 
   const roomTypes = ROOM_TYPES[locale as keyof typeof ROOM_TYPES] ?? ROOM_TYPES.en;
 
@@ -249,25 +248,24 @@ export default function UploadPage() {
         </div>
       </div>
 
-      {/* Preferences (collapsible) */}
+      {/* Preferences */}
       <div className="mt-5">
-        <button
-          onClick={() => setPrefsOpen((p) => !p)}
-          className="flex w-full items-center justify-between rounded-2xl border border-border bg-card/40 px-4 py-3 text-sm font-semibold transition hover:border-coral/40"
-        >
-          <span>{dict.upload.preferences}</span>
-          {prefsOpen ? <ChevronUp size={16} className="text-muted" /> : <ChevronDown size={16} className="text-muted" />}
-        </button>
-
-        {prefsOpen && (
-          <textarea
-            value={preferences}
-            onChange={(e) => setPreferences(e.target.value)}
-            placeholder={dict.upload.preferencesPlaceholder}
-            rows={3}
-            className="mt-2 w-full resize-none rounded-2xl border border-border bg-card/40 px-4 py-3 text-sm outline-none placeholder:text-muted focus:border-coral transition"
-          />
-        )}
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted">
+          {dict.upload.preferences}
+        </p>
+        <textarea
+          value={preferences}
+          onChange={(e) => setPreferences(e.target.value)}
+          placeholder={dict.upload.preferencesPlaceholder}
+          rows={4}
+          className="w-full resize-none rounded-2xl border border-border bg-card/40 px-4 py-3 text-sm outline-none placeholder:text-muted focus:border-coral transition"
+          style={{ minHeight: "100px" }}
+          onInput={(e) => {
+            const el = e.currentTarget;
+            el.style.height = "auto";
+            el.style.height = el.scrollHeight + "px";
+          }}
+        />
       </div>
 
       {error && (
