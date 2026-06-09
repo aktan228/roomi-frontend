@@ -21,8 +21,7 @@ const en: Dictionary = {
     subtitle: "Pick a foundation for your AI-enhanced living space.",
     trending: "TRENDING",
     aiStylist: "AI Stylist",
-    aiStylistDesc:
-      "Analyze your current space and suggest the perfect match automatically.",
+    aiStylistDesc: "Analyze your current space and suggest the perfect match automatically.",
     aiStylistCta: "Start analysis",
   },
   result: {
@@ -50,6 +49,23 @@ const en: Dictionary = {
   profile: {
     title: "Profile",
     subtitle: "Manage your account and plan.",
+    designs: "designs",
+    plan: "Plan",
+    free: "Free",
+    premium: "Premium",
+    upgradeCta: "Upgrade to Premium",
+    upgradeDesc: "More designs, detailed estimates and 3D floor plans",
+    settings: "Settings",
+    language: "Language",
+    languageNote: "Switch via /ru or /en in the URL",
+    budget: "Default budget",
+    budgetEconomy: "Economy",
+    budgetMedium: "Medium",
+    budgetPremium: "Premium",
+    about: "About",
+    version: "Version",
+    feedback: "Send feedback",
+    editProfile: "Edit",
   },
   common: {
     comingSoon: "Coming soon",

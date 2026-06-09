@@ -14,7 +14,15 @@ export type Dictionary = {
   };
   gallery: { title: string; subtitle: string; empty: string; emptyHint: string };
   chat: { title: string; subtitle: string; placeholder: string; send: string };
-  profile: { title: string; subtitle: string };
+  profile: {
+    title: string; subtitle: string;
+    designs: string; plan: string; free: string; premium: string;
+    upgradeCta: string; upgradeDesc: string;
+    settings: string; language: string; languageNote: string;
+    budget: string; budgetEconomy: string; budgetMedium: string; budgetPremium: string;
+    about: string; version: string; feedback: string;
+    editProfile: string;
+  };
   common: { comingSoon: string; before: string; after: string; style: string };
 };
 
@@ -39,8 +47,7 @@ const ru: Dictionary = {
     subtitle: "Выберите основу для вашего интерьера с AI.",
     trending: "ПОПУЛЯРНО",
     aiStylist: "AI Стилист",
-    aiStylistDesc:
-      "Проанализируем ваше пространство и автоматически подберём идеальный стиль.",
+    aiStylistDesc: "Проанализируем ваше пространство и автоматически подберём идеальный стиль.",
     aiStylistCta: "Начать анализ",
   },
   result: {
@@ -68,6 +75,23 @@ const ru: Dictionary = {
   profile: {
     title: "Профиль",
     subtitle: "Управляйте аккаунтом и планом.",
+    designs: "редизайнов",
+    plan: "Тариф",
+    free: "Бесплатно",
+    premium: "Premium",
+    upgradeCta: "Перейти на Premium",
+    upgradeDesc: "Больше дизайнов, точная смета и 3D-планировка",
+    settings: "Настройки",
+    language: "Язык",
+    languageNote: "Смена языка через /ru и /en в адресе",
+    budget: "Бюджет по умолчанию",
+    budgetEconomy: "Эконом",
+    budgetMedium: "Средний",
+    budgetPremium: "Премиум",
+    about: "О приложении",
+    version: "Версия",
+    feedback: "Написать отзыв",
+    editProfile: "Редактировать",
   },
   common: {
     comingSoon: "Скоро",
