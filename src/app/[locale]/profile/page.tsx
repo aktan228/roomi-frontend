@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Sparkles, Globe, Wallet, MessageSquare, Info,
-  ChevronRight, Crown,
+  ChevronRight, Crown, DollarSign,
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useDictionary } from "@/components/DictionaryProvider";
 import { useToast } from "@/components/Toast";
 import { loadGallery } from "@/lib/gallery";
+import { CURRENCIES, getStoredCurrency, setStoredCurrency, type CurrencyCode } from "@/lib/currency";
 
 type Budget = "economy" | "medium" | "premium";
 
@@ -21,16 +22,23 @@ export default function ProfilePage() {
   const { show, toast } = useToast();
   const [designCount, setDesignCount] = useState(0);
   const [budget, setBudget] = useState<Budget>("medium");
+  const [currency, setCurrency] = useState<CurrencyCode>("KGS");
 
   useEffect(() => {
     setDesignCount(loadGallery().length);
     const saved = localStorage.getItem(BUDGET_KEY) as Budget | null;
     if (saved) setBudget(saved);
+    setCurrency(getStoredCurrency());
   }, []);
 
   function selectBudget(b: Budget) {
     setBudget(b);
     localStorage.setItem(BUDGET_KEY, b);
+  }
+
+  function selectCurrency(c: CurrencyCode) {
+    setCurrency(c);
+    setStoredCurrency(c);
   }
 
   const budgetOptions: { key: Budget; label: string }[] = [
@@ -142,6 +150,29 @@ export default function ProfilePage() {
                   }`}
                 >
                   {l.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Currency */}
+          <div className="px-4 py-4">
+            <div className="flex items-center gap-3 mb-3">
+              <DollarSign size={18} className="text-coral" />
+              <span className="text-sm font-semibold">{dict.profile.currency}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {CURRENCIES.map(({ code, flag }) => (
+                <button
+                  key={code}
+                  onClick={() => selectCurrency(code)}
+                  className={`rounded-2xl py-2 text-xs font-semibold transition ${
+                    currency === code
+                      ? "bg-coral text-white shadow-sm shadow-coral/30"
+                      : "bg-background border border-border text-muted hover:border-coral/50"
+                  }`}
+                >
+                  {flag} {code}
                 </button>
               ))}
             </div>

@@ -9,6 +9,7 @@ import { useDictionary } from "@/components/DictionaryProvider";
 import { getProducts, getPlan, type RedesignResult, type ProductsResult, type PlanResult } from "@/lib/api";
 import { getMockProducts, getMockPlan } from "@/lib/mock-data";
 import { saveToGallery } from "@/lib/gallery";
+import { getStoredCurrency, formatAmount, type CurrencyCode } from "@/lib/currency";
 
 type Tab = "products" | "plan";
 
@@ -24,6 +25,9 @@ export default function DesignResultPage() {
   const [plan, setPlan] = useState<PlanResult | null>(null);
   const [tab, setTab] = useState<Tab>("products");
   const [loadingData, setLoadingData] = useState(true);
+  const [currency, setCurrency] = useState<CurrencyCode>("KGS");
+
+  useEffect(() => { setCurrency(getStoredCurrency()); }, []);
 
   async function handleDownload() {
     if (!design) return;
@@ -131,17 +135,17 @@ export default function DesignResultPage() {
           <Loader2 className="animate-spin text-muted" size={28} />
         </div>
       ) : tab === "products" ? (
-        <ProductsTab products={products} dict={dict.result} />
+        <ProductsTab products={products} dict={dict.result} currency={currency} />
       ) : (
-        <PlanTab plan={plan} dict={dict.result} />
+        <PlanTab plan={plan} dict={dict.result} currency={currency} />
       )}
     </AppShell>
   );
 }
 
-function ProductsTab({ products, dict }: { products: ProductsResult | null; dict: Record<string, string> }) {
+function ProductsTab({ products, dict, currency }: { products: ProductsResult | null; dict: Record<string, string>; currency: CurrencyCode }) {
   if (!products) return null;
-  const fmt = (n: number) => n.toLocaleString("ru-KG") + " " + products.currency;
+  const fmt = (n: number) => formatAmount(n, currency);
 
   return (
     <div className="mt-4 space-y-3 pb-4">
@@ -171,9 +175,9 @@ function ProductsTab({ products, dict }: { products: ProductsResult | null; dict
   );
 }
 
-function PlanTab({ plan, dict }: { plan: PlanResult | null; dict: Record<string, string> }) {
+function PlanTab({ plan, dict, currency }: { plan: PlanResult | null; dict: Record<string, string>; currency: CurrencyCode }) {
   if (!plan) return null;
-  const fmt = (n: number) => n.toLocaleString("ru-KG") + " " + plan.currency;
+  const fmt = (n: number) => formatAmount(n, currency);
 
   return (
     <div className="mt-4 space-y-4 pb-4">
@@ -183,22 +187,21 @@ function PlanTab({ plan, dict }: { plan: PlanResult | null; dict: Record<string,
       </div>
       {plan.weeks.map((week) => (
         <div key={week.week} className="rounded-2xl border border-border bg-card/40 p-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">{week.icon}</span>
+          <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-muted">{dict.week} {week.week}</p>
               <p className="font-semibold">{week.title}</p>
             </div>
-            <span className="ml-auto text-sm font-bold text-coral">{fmt(week.estimated_cost)}</span>
+            <span className="text-sm font-bold text-coral">{fmt(week.estimated_cost)}</span>
           </div>
-          <ul className="mt-3 space-y-1.5">
+          <ol className="mt-3 space-y-1.5">
             {week.tasks.map((task, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-muted">
-                <span className="mt-0.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-coral" />
+                <span className="flex-shrink-0 font-semibold text-coral/70">{i + 1}.</span>
                 {task}
               </li>
             ))}
-          </ul>
+          </ol>
         </div>
       ))}
     </div>

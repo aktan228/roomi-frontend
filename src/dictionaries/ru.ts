@@ -26,7 +26,7 @@ export type Dictionary = {
     designs: string; plan: string; free: string; premium: string;
     upgradeCta: string; upgradeDesc: string;
     settings: string; language: string; languageNote: string;
-    budget: string; budgetEconomy: string; budgetMedium: string; budgetPremium: string;
+    currency: string; budget: string; budgetEconomy: string; budgetMedium: string; budgetPremium: string;
     about: string; version: string; feedback: string;
     editProfile: string;
   };
@@ -103,6 +103,7 @@ const ru: Dictionary = {
     settings: "Настройки",
     language: "Язык",
     languageNote: "Смена языка через /ru и /en в адресе",
+    currency: "Валюта",
     budget: "Бюджет по умолчанию",
     budgetEconomy: "Эконом",
     budgetMedium: "Средний",

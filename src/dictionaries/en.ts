@@ -70,6 +70,7 @@ const en: Dictionary = {
     settings: "Settings",
     language: "Language",
     languageNote: "Switch via /ru or /en in the URL",
+    currency: "Currency",
     budget: "Default budget",
     budgetEconomy: "Economy",
     budgetMedium: "Medium",
