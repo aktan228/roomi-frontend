@@ -8,6 +8,7 @@ import { BeforeAfterSlider } from "@/components/BeforeAfterSlider";
 import { useDictionary } from "@/components/DictionaryProvider";
 import { getProducts, getPlan, type RedesignResult, type ProductsResult, type PlanResult } from "@/lib/api";
 import { getMockProducts, getMockPlan } from "@/lib/mock-data";
+import { saveToGallery } from "@/lib/gallery";
 
 type Tab = "products" | "plan";
 
@@ -26,7 +27,18 @@ export default function DesignResultPage() {
   useEffect(() => {
     const raw = sessionStorage.getItem(`design_${id}`);
     if (raw) {
-      try { setDesign(JSON.parse(raw)); } catch { /* ignore */ }
+      try {
+        const parsed: RedesignResult & { original_preview?: string } = JSON.parse(raw);
+        setDesign(parsed);
+        // Auto-save to gallery
+        saveToGallery({
+          id: parsed.design_id,
+          style: parsed.style,
+          resultUrl: parsed.result_url,
+          originalPreview: parsed.original_preview ?? "",
+          createdAt: Date.now(),
+        });
+      } catch { /* ignore */ }
     }
 
     Promise.all([
