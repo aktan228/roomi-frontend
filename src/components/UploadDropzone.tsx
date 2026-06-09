@@ -8,27 +8,31 @@ export function UploadDropzone({
   disabled = false,
   title = "Upload your room photo",
   hint = "Tap to browse or drag and drop",
+  previewUrl,
 }: {
   onFile?: (file: File | null) => void;
   disabled?: boolean;
   title?: string;
   hint?: string;
+  previewUrl?: string | null;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [internalPreview, setInternalPreview] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
+
+  const preview = previewUrl ?? internalPreview;
 
   function handleFiles(files: FileList | null) {
     const file = files?.[0] ?? null;
     if (file && file.type.startsWith("image/")) {
-      setPreview(URL.createObjectURL(file));
+      setInternalPreview(URL.createObjectURL(file));
       onFile?.(file);
     }
   }
 
   function clear(e: React.MouseEvent) {
     e.stopPropagation();
-    setPreview(null);
+    setInternalPreview(null);
     onFile?.(null);
     if (inputRef.current) inputRef.current.value = "";
   }

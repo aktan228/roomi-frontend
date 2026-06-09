@@ -15,6 +15,10 @@ const en: Dictionary = {
     cta: "Redesign My Room",
     ctaLoading: "Analyzing your room...",
     hint: "Upload a photo to start",
+    trySample: "Try a sample",
+    styleTitle: "Interior style",
+    preferences: "Preferences (optional)",
+    preferencesPlaceholder: "E.g. more natural light, warm tones, minimal furniture...",
   },
   style: {
     title: "Choose your style",
@@ -34,6 +38,7 @@ const en: Dictionary = {
     weeksTotal: "weeks total",
     week: "Week",
     askAi: "Ask AI about this design",
+    download: "Download design",
   },
   gallery: {
     title: "Gallery",

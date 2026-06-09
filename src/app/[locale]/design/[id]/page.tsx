@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { ShoppingBag, CalendarDays, Loader2, ExternalLink, MessageSquare } from "lucide-react";
+import { ShoppingBag, CalendarDays, Loader2, ExternalLink, MessageSquare, Download } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { BeforeAfterSlider } from "@/components/BeforeAfterSlider";
 import { useDictionary } from "@/components/DictionaryProvider";
@@ -24,6 +24,20 @@ export default function DesignResultPage() {
   const [plan, setPlan] = useState<PlanResult | null>(null);
   const [tab, setTab] = useState<Tab>("products");
   const [loadingData, setLoadingData] = useState(true);
+
+  async function handleDownload() {
+    if (!design) return;
+    try {
+      const res = await fetch(design.result_url);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `roomi-${design.style}-design.jpg`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch { /* ignore cross-origin */ }
+  }
 
   useEffect(() => {
     const raw = sessionStorage.getItem(`design_${id}`);
@@ -75,13 +89,22 @@ export default function DesignResultPage() {
         )}
       </div>
 
-      {/* Ask AI about this design */}
-      <button
-        onClick={() => router.push(`/${locale}/chat?designId=${id}&style=${style}`)}
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-coral/30 bg-coral/5 py-3 text-sm font-semibold text-coral transition hover:bg-coral/10"
-      >
-        <MessageSquare size={16} /> {dict.result.askAi}
-      </button>
+      {/* Ask AI + Download */}
+      <div className="mt-4 flex gap-2">
+        <button
+          onClick={() => router.push(`/${locale}/chat?designId=${id}&style=${style}`)}
+          className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-coral/30 bg-coral/5 py-3 text-sm font-semibold text-coral transition hover:bg-coral/10"
+        >
+          <MessageSquare size={16} /> {dict.result.askAi}
+        </button>
+        <button
+          onClick={handleDownload}
+          disabled={!design}
+          className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-card/40 px-4 py-3 text-sm font-semibold text-muted transition hover:border-coral/30 hover:text-coral disabled:opacity-40"
+        >
+          <Download size={16} />
+        </button>
+      </div>
 
       {/* Tab switcher */}
       <div className="mt-6 flex rounded-2xl bg-card p-1">

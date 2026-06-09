@@ -3,6 +3,8 @@ export type Dictionary = {
   upload: {
     title: string; subtitle: string; dropzoneTitle: string;
     dropzoneHint: string; cta: string; ctaLoading: string; hint: string;
+    trySample: string; styleTitle: string;
+    preferences: string; preferencesPlaceholder: string;
   };
   style: {
     title: string; subtitle: string; trending: string;
@@ -11,7 +13,7 @@ export type Dictionary = {
   result: {
     title: string; mockNotice: string; shoppingList: string; renoPlan: string;
     totalBudget: string; buy: string; weeksTotal: string; week: string;
-    askAi: string;
+    askAi: string; download: string;
   };
   gallery: { title: string; subtitle: string; empty: string; emptyHint: string };
   chat: {
@@ -45,6 +47,10 @@ const ru: Dictionary = {
     cta: "Переделать комнату",
     ctaLoading: "Анализируем комнату...",
     hint: "Загрузите фото, чтобы начать",
+    trySample: "Попробовать пример",
+    styleTitle: "Стиль оформления",
+    preferences: "Пожелания (необязательно)",
+    preferencesPlaceholder: "Например: больше света, тёплые тона, минимум мебели...",
   },
   style: {
     title: "Выберите стиль",
@@ -64,6 +70,7 @@ const ru: Dictionary = {
     weeksTotal: "нед. всего",
     week: "Неделя",
     askAi: "Спросить AI об этом дизайне",
+    download: "Скачать дизайн",
   },
   gallery: {
     title: "Галерея",

@@ -69,12 +69,22 @@ export async function redesignRoom(
   style: string,
   roomType = "bedroom",
   budget?: number,
+  description?: string,
 ): Promise<RedesignResult> {
   const form = new FormData();
   form.append("file", file);
   form.append("style", style);
   form.append("room_type", roomType);
   if (budget) form.append("budget", String(budget));
+  if (description) form.append("description", description);
+
+  const mockResult = (): RedesignResult => ({
+    design_id: Math.random().toString(36).slice(2, 10),
+    original_url: "",
+    result_url: MOCK_RESULTS[style] ?? MOCK_RESULTS["minimal"],
+    style,
+    is_mock: true,
+  });
 
   try {
     const res = await fetch(`${BASE}/api/redesign`, {
@@ -82,25 +92,11 @@ export async function redesignRoom(
       body: form,
     });
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail ?? `Redesign failed (${res.status})`);
-    }
-
+    if (!res.ok) return mockResult();
     return res.json();
-  } catch (e) {
-    // Backend unreachable — return mock result so the demo still works
-    if (e instanceof TypeError && e.message.includes("fetch")) {
-      const id = Math.random().toString(36).slice(2, 10);
-      return {
-        design_id: id,
-        original_url: "",
-        result_url: MOCK_RESULTS[style] ?? MOCK_RESULTS["minimal"],
-        style,
-        is_mock: true,
-      };
-    }
-    throw e;
+  } catch {
+    // Backend unreachable or any error — return mock so demo never breaks
+    return mockResult();
   }
 }
 
