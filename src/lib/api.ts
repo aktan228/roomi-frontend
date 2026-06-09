@@ -1,0 +1,137 @@
+const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+const MOCK_RESULTS: Record<string, string> = {
+  minimal:    "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=800&q=80",
+  modern:     "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&q=80",
+  scandi:     "https://images.unsplash.com/photo-1567016432779-094069958ea5?w=800&q=80",
+  "wabi-sabi":"https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=800&q=80",
+  industrial: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&q=80",
+};
+
+// ── Types ─────────────────────────────────────────
+
+export interface RedesignResult {
+  design_id: string;
+  original_url: string;
+  result_url: string;
+  style: string;
+  is_mock: boolean;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  currency: string;
+  image: string;
+  shop: string;
+  url: string;
+  priority: number;
+}
+
+export interface ProductsResult {
+  style: string;
+  budget: number | null;
+  products: Product[];
+  total_price: number;
+  currency: string;
+  is_mock: boolean;
+}
+
+export interface PlanWeek {
+  week: number;
+  title: string;
+  tasks: string[];
+  estimated_cost: number;
+  currency: string;
+  icon: string;
+}
+
+export interface PlanResult {
+  design_id: string;
+  total_weeks: number;
+  total_cost: number;
+  currency: string;
+  weeks: PlanWeek[];
+  is_mock: boolean;
+}
+
+export interface ChatResult {
+  reply: string;
+  is_mock: boolean;
+}
+
+// ── API calls ─────────────────────────────────────
+
+export async function redesignRoom(
+  file: File,
+  style: string,
+  roomType = "bedroom",
+  budget?: number,
+): Promise<RedesignResult> {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("style", style);
+  form.append("room_type", roomType);
+  if (budget) form.append("budget", String(budget));
+
+  try {
+    const res = await fetch(`${BASE}/api/redesign`, {
+      method: "POST",
+      body: form,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail ?? `Redesign failed (${res.status})`);
+    }
+
+    return res.json();
+  } catch (e) {
+    // Backend unreachable — return mock result so the demo still works
+    if (e instanceof TypeError && e.message.includes("fetch")) {
+      const id = Math.random().toString(36).slice(2, 10);
+      return {
+        design_id: id,
+        original_url: "",
+        result_url: MOCK_RESULTS[style] ?? MOCK_RESULTS["minimal"],
+        style,
+        is_mock: true,
+      };
+    }
+    throw e;
+  }
+}
+
+export async function getProducts(
+  style: string,
+  budget?: number,
+): Promise<ProductsResult> {
+  const params = new URLSearchParams({ style });
+  if (budget) params.set("budget", String(budget));
+
+  const res = await fetch(`${BASE}/api/products?${params}`);
+  if (!res.ok) throw new Error("Failed to load products");
+  return res.json();
+}
+
+export async function getPlan(designId: string): Promise<PlanResult> {
+  const res = await fetch(`${BASE}/api/plan/${designId}`);
+  if (!res.ok) throw new Error("Failed to load plan");
+  return res.json();
+}
+
+export async function sendChat(
+  message: string,
+  history: { role: string; content: string }[] = [],
+  context?: string,
+): Promise<ChatResult> {
+  const res = await fetch(`${BASE}/api/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message, history, context }),
+  });
+  if (!res.ok) throw new Error("Chat failed");
+  return res.json();
+}

@@ -1,16 +1,42 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Pencil, Sparkles } from "lucide-react";
+import { Pencil, Sparkles, Loader2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/Button";
 import { UploadDropzone } from "@/components/UploadDropzone";
 import { useSelectedStyle } from "@/lib/useSelectedStyle";
+import { redesignRoom } from "@/lib/api";
 
 export default function UploadPage() {
+  const router = useRouter();
   const { style } = useSelectedStyle();
   const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleRedesign() {
+    if (!file) return;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await redesignRoom(file, style.id);
+
+      // Save result to sessionStorage so the result page can access it
+      sessionStorage.setItem(`design_${result.design_id}`, JSON.stringify({
+        ...result,
+        original_preview: URL.createObjectURL(file),
+      }));
+
+      router.push(`/design/${result.design_id}?style=${style.id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+      setLoading(false);
+    }
+  }
 
   return (
     <AppShell>
@@ -30,15 +56,30 @@ export default function UploadPage() {
       </p>
 
       <div className="mt-6">
-        <UploadDropzone onFile={setFile} />
+        <UploadDropzone onFile={setFile} disabled={loading} />
       </div>
 
+      {error && (
+        <p className="mt-3 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">
+          {error}
+        </p>
+      )}
+
       <div className="mt-6">
-        <Button disabled={!file}>
-          <Sparkles size={18} />
-          Redesign My Room
+        <Button disabled={!file || loading} onClick={handleRedesign}>
+          {loading ? (
+            <>
+              <Loader2 size={18} className="animate-spin" />
+              Analyzing your room...
+            </>
+          ) : (
+            <>
+              <Sparkles size={18} />
+              Redesign My Room
+            </>
+          )}
         </Button>
-        {!file && (
+        {!file && !loading && (
           <p className="mt-2 text-center text-xs text-muted">
             Upload a photo to start
           </p>

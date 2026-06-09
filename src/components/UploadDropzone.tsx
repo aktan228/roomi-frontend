@@ -5,8 +5,10 @@ import { Camera, X } from "lucide-react";
 
 export function UploadDropzone({
   onFile,
+  disabled = false,
 }: {
   onFile?: (file: File | null) => void;
+  disabled?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -29,20 +31,20 @@ export function UploadDropzone({
 
   return (
     <div
-      onClick={() => inputRef.current?.click()}
+      onClick={() => !disabled && inputRef.current?.click()}
       onDragOver={(e) => {
         e.preventDefault();
-        setDragging(true);
+        if (!disabled) setDragging(true);
       }}
       onDragLeave={() => setDragging(false)}
       onDrop={(e) => {
         e.preventDefault();
         setDragging(false);
-        handleFiles(e.dataTransfer.files);
+        if (!disabled) handleFiles(e.dataTransfer.files);
       }}
-      className={`relative flex aspect-[4/5] w-full cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed p-6 text-center transition ${
-        dragging ? "border-coral bg-coral-light" : "border-border bg-card/40"
-      }`}
+      className={`relative flex aspect-[4/5] w-full flex-col items-center justify-center rounded-3xl border-2 border-dashed p-6 text-center transition ${
+        disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+      } ${dragging ? "border-coral bg-coral-light" : "border-border bg-card/40"}`}
     >
       <input
         ref={inputRef}
