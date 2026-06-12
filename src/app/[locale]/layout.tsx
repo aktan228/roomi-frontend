@@ -4,6 +4,7 @@ import "../globals.css";
 import { isValidLocale, DEFAULT_LOCALE, type Locale } from "@/lib/i18n";
 import { getDictionary } from "@/lib/i18n";
 import { DictionaryProvider } from "@/components/DictionaryProvider";
+import { DesignJobProvider } from "@/lib/design-job";
 
 const comfortaa = Comfortaa({
   variable: "--font-sans",
@@ -40,7 +41,9 @@ export default async function LocaleLayout({
     <html lang={locale} className={`${comfortaa.variable} h-full`}>
       <body className="min-h-full bg-background text-foreground">
         <DictionaryProvider dict={dict} locale={locale}>
-          {children}
+          <DesignJobProvider>
+            {children}
+          </DesignJobProvider>
         </DictionaryProvider>
       </body>
     </html>

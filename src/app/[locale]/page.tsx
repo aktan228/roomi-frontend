@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Sparkles, Loader2, ChevronDown, Check } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/Button";
@@ -9,7 +9,7 @@ import { UploadDropzone } from "@/components/UploadDropzone";
 import { useSelectedStyle } from "@/lib/useSelectedStyle";
 import { STYLES } from "@/lib/styles";
 import { startRedesign } from "@/lib/api";
-import { storeJob } from "@/lib/design-job";
+import { useDesignJob } from "@/lib/design-job";
 import { useDictionary } from "@/components/DictionaryProvider";
 
 // Room types
@@ -66,10 +66,10 @@ const SAMPLE_ROOMS = [
 ];
 
 export default function UploadPage() {
-  const router = useRouter();
   const { locale } = useParams<{ locale: string }>();
   const { dict } = useDictionary();
   const { style, setStyle } = useSelectedStyle();
+  const { startJob, active, progress, label } = useDesignJob();
 
   const [roomTypeOpen, setRoomTypeOpen] = useState(false);
   const roomTypeRef = useRef<HTMLDivElement>(null);
@@ -134,9 +134,9 @@ export default function UploadPage() {
 
       if (!job) throw new Error("Backend unavailable");
 
-      storeJob(job.job_id);
-      // DesignProgress in AppShell picks up job_id from localStorage and
-      // polls for status — user can navigate freely while it runs
+      startJob(job.job_id);
+      // DesignProgress (in AppShell) shows the floating panel and polls;
+      // the user can navigate freely while it runs
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -304,8 +304,24 @@ export default function UploadPage() {
 
       {/* Submit */}
       <div className="mt-5">
-        <Button disabled={!file || loading} onClick={handleRedesign}>
-          {loading ? (
+        <Button
+          disabled={!file || loading || active}
+          onClick={handleRedesign}
+          className="relative overflow-hidden"
+        >
+          {active ? (
+            <>
+              <Loader2 size={18} className="animate-spin" />
+              <span className="truncate">{label || dict.upload.ctaLoading}</span>
+              {/* mini progress bar pinned to the bottom edge of the button */}
+              <span className="absolute inset-x-0 bottom-0 h-1 bg-white/25">
+                <span
+                  className="block h-full bg-white transition-all duration-700"
+                  style={{ width: `${progress}%` }}
+                />
+              </span>
+            </>
+          ) : loading ? (
             <>
               <Loader2 size={18} className="animate-spin" />
               {dict.upload.ctaLoading}
@@ -317,7 +333,7 @@ export default function UploadPage() {
             </>
           )}
         </Button>
-        {!file && !loading && (
+        {!file && !loading && !active && (
           <p className="mt-2 text-center text-xs text-muted">{dict.upload.hint}</p>
         )}
       </div>

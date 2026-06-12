@@ -64,11 +64,13 @@ export function UploadDropzone({
 
       {preview ? (
         <>
+          {/* object-contain: any aspect ratio shows fully, no crop.
+              The actual File sent to SD/ControlNet is untouched by this. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={preview}
             alt="Room preview"
-            className="absolute inset-0 h-full w-full rounded-3xl object-cover"
+            className="absolute inset-0 h-full w-full rounded-3xl bg-card object-contain"
           />
           <button
             onClick={clear}

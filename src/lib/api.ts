@@ -1,13 +1,5 @@
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-const MOCK_RESULTS: Record<string, string> = {
-  minimal:    "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=800&q=80",
-  modern:     "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&q=80",
-  scandi:     "https://images.unsplash.com/photo-1567016432779-094069958ea5?w=800&q=80",
-  "wabi-sabi":"https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=800&q=80",
-  industrial: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&q=80",
-};
-
 // ── Types ─────────────────────────────────────────
 
 export interface RoomObject {
