@@ -1,5 +1,6 @@
 import { Header } from "./Header";
 import { BottomNav } from "./BottomNav";
+import { DesignProgress } from "./DesignProgress";
 
 export function AppShell({
   children,
@@ -14,6 +15,7 @@ export function AppShell({
       <main className={`flex-1 ${noPadding ? "" : "px-5 pb-32 pt-2"}`}>
         {children}
       </main>
+      <DesignProgress />
       <BottomNav />
     </div>
   );

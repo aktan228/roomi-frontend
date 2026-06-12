@@ -8,7 +8,8 @@ import { Button } from "@/components/Button";
 import { UploadDropzone } from "@/components/UploadDropzone";
 import { useSelectedStyle } from "@/lib/useSelectedStyle";
 import { STYLES } from "@/lib/styles";
-import { redesignRoom } from "@/lib/api";
+import { startRedesign } from "@/lib/api";
+import { storeJob } from "@/lib/design-job";
 import { useDictionary } from "@/components/DictionaryProvider";
 
 // Room types
@@ -123,7 +124,7 @@ export default function UploadPage() {
     setError(null);
 
     try {
-      const result = await redesignRoom(
+      const job = await startRedesign(
         file,
         style.id,
         roomType,
@@ -131,14 +132,14 @@ export default function UploadPage() {
         preferences.trim() || undefined,
       );
 
-      sessionStorage.setItem(`design_${result.design_id}`, JSON.stringify({
-        ...result,
-        original_preview: previewUrl ?? URL.createObjectURL(file),
-      }));
+      if (!job) throw new Error("Backend unavailable");
 
-      router.push(`/${locale}/design/${result.design_id}?style=${style.id}`);
+      storeJob(job.job_id);
+      // DesignProgress in AppShell picks up job_id from localStorage and
+      // polls for status — user can navigate freely while it runs
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
       setLoading(false);
     }
   }

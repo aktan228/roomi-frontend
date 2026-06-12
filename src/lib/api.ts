@@ -10,12 +10,34 @@ const MOCK_RESULTS: Record<string, string> = {
 
 // ── Types ─────────────────────────────────────────
 
+export interface RoomObject {
+  label: string;
+  confidence: number;
+  bbox: [number, number, number, number];
+  area_ratio: number;
+  suggestion: "keep" | "replace" | "remove";
+}
+
+export interface RoomAnalysis {
+  room_type: string;
+  est_area_m2: number;
+  ceiling_height_m: number;
+  objects: RoomObject[];
+  surfaces: { wall_m2: number; floor_m2: number; ceiling_m2: number };
+  palette: string[];
+  lighting: string;
+  is_stub: boolean;
+}
+
 export interface RedesignResult {
   design_id: string;
   original_url: string;
   result_url: string;
   style: string;
   is_mock: boolean;
+  analysis?: RoomAnalysis;
+  products?: ProductsResult;
+  plan?: PlanResult;
 }
 
 export interface Product {
@@ -64,39 +86,27 @@ export interface ChatResult {
 
 // ── API calls ─────────────────────────────────────
 
-export async function redesignRoom(
+/** Returns a job_id immediately; poll /api/redesign/job/:id for progress. */
+export async function startRedesign(
   file: File,
   style: string,
   roomType = "bedroom",
   budget?: number,
   description?: string,
-): Promise<RedesignResult> {
+): Promise<{ job_id: string } | null> {
   const form = new FormData();
   form.append("file", file);
   form.append("style", style);
   form.append("room_type", roomType);
   if (budget) form.append("budget", String(budget));
-  if (description) form.append("description", description);
-
-  const mockResult = (): RedesignResult => ({
-    design_id: Math.random().toString(36).slice(2, 10),
-    original_url: "",
-    result_url: MOCK_RESULTS[style] ?? MOCK_RESULTS["minimal"],
-    style,
-    is_mock: true,
-  });
+  if (description) form.append("preferences", description);
 
   try {
-    const res = await fetch(`${BASE}/api/redesign`, {
-      method: "POST",
-      body: form,
-    });
-
-    if (!res.ok) return mockResult();
+    const res = await fetch(`${BASE}/api/redesign`, { method: "POST", body: form });
+    if (!res.ok) return null;
     return res.json();
   } catch {
-    // Backend unreachable or any error — return mock so demo never breaks
-    return mockResult();
+    return null;
   }
 }
 
