@@ -27,6 +27,7 @@ export default function DesignResultPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [currency, setCurrency] = useState<CurrencyCode>("KGS");
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setCurrency(getStoredCurrency()); }, []);
 
   async function handleDownload() {
@@ -45,11 +46,18 @@ export default function DesignResultPage() {
 
   useEffect(() => {
     const raw = sessionStorage.getItem(`design_${id}`);
+    let embeddedProducts: ProductsResult | null = null;
+    let embeddedPlan: PlanResult | null = null;
+
     if (raw) {
       try {
         const parsed: RedesignResult & { original_preview?: string } = JSON.parse(raw);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setDesign(parsed);
-        // Auto-save to gallery
+        // The backend embeds the AI-generated shopping list + reno plan in the
+        // redesign result — prefer them over the generic per-style endpoints.
+        embeddedProducts = parsed.products ?? null;
+        embeddedPlan = parsed.plan ?? null;
         saveToGallery({
           id: parsed.design_id,
           style: parsed.style,
@@ -60,9 +68,16 @@ export default function DesignResultPage() {
       } catch { /* ignore */ }
     }
 
+    if (embeddedProducts && embeddedPlan) {
+      setProducts(embeddedProducts);
+      setPlan(embeddedPlan);
+      setLoadingData(false);
+      return;
+    }
+
     Promise.all([
-      getProducts(style).catch(() => getMockProducts(style)),
-      getPlan(id).catch(() => getMockPlan(id)),
+      embeddedProducts ?? getProducts(style).catch(() => getMockProducts(style)),
+      embeddedPlan ?? getPlan(id).catch(() => getMockPlan(id)),
     ]).then(([p, pl]) => {
       setProducts(p);
       setPlan(pl);
@@ -77,12 +92,21 @@ export default function DesignResultPage() {
       {/* Before / After */}
       <div className="mt-4">
         {design ? (
-          <BeforeAfterSlider
-            before={design.original_preview ?? design.original_url}
-            after={design.result_url}
-            labelBefore={dict.common.before}
-            labelAfter={dict.common.after}
-          />
+          (design.original_preview || design.original_url) ? (
+            <BeforeAfterSlider
+              before={design.original_preview || design.original_url}
+              after={design.result_url}
+              labelBefore={dict.common.before}
+              labelAfter={dict.common.after}
+            />
+          ) : (
+            // No "before" image available → show the result on its own
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={design.result_url} alt="Redesign" className="absolute inset-0 h-full w-full object-cover" />
+              <span className="absolute bottom-3 right-3 rounded-full bg-coral/80 px-2 py-0.5 text-xs font-semibold text-white backdrop-blur">{dict.common.after}</span>
+            </div>
+          )
         ) : (
           <div className="flex aspect-[4/3] items-center justify-center rounded-3xl bg-card">
             <Loader2 className="animate-spin text-muted" size={32} />

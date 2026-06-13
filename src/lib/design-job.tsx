@@ -18,11 +18,12 @@ interface JobState {
   result: Record<string, unknown> | null;
   error: string | null;
   minimized: boolean;
+  originalPreview: string | null;  // object URL of the uploaded photo (the "before")
 }
 
 interface JobContextValue extends JobState {
   active: boolean;                 // a job is running or finished but not dismissed
-  startJob: (jobId: string) => void;
+  startJob: (jobId: string, originalPreview?: string) => void;
   minimize: () => void;
   expand: () => void;
   dismiss: () => void;             // cancel / clear entirely
@@ -30,7 +31,7 @@ interface JobContextValue extends JobState {
 
 const EMPTY: JobState = {
   jobId: null, status: null, progress: 0, label: "",
-  result: null, error: null, minimized: false,
+  result: null, error: null, minimized: false, originalPreview: null,
 };
 
 const Ctx = createContext<JobContextValue | null>(null);
@@ -83,9 +84,9 @@ export function DesignJobProvider({ children }: { children: React.ReactNode }) {
     return stop;
   }, [begin, stop]);
 
-  const startJob = useCallback((jobId: string) => {
+  const startJob = useCallback((jobId: string, originalPreview?: string) => {
     localStorage.setItem(JOB_KEY, jobId);
-    setState({ ...EMPTY, jobId, status: "queued", label: "В очереди..." });
+    setState({ ...EMPTY, jobId, status: "queued", label: "В очереди...", originalPreview: originalPreview ?? null });
     begin(jobId);
   }, [begin]);
 

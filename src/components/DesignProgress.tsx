@@ -7,7 +7,7 @@ import { useDesignJob } from "@/lib/design-job";
 
 export function DesignProgress() {
   const {
-    jobId, status, progress, label, result, error, minimized,
+    jobId, status, progress, label, result, error, minimized, originalPreview,
     minimize, expand, dismiss,
   } = useDesignJob();
   const router = useRouter();
@@ -19,14 +19,16 @@ export function DesignProgress() {
     if (status === "done" && result) {
       const designId = result.design_id as string;
       const style = result.style as string;
-      sessionStorage.setItem(`design_${designId}`, JSON.stringify(result));
+      // Attach the uploaded photo as the "before" image
+      const merged = { ...result, original_preview: originalPreview ?? result.original_preview };
+      sessionStorage.setItem(`design_${designId}`, JSON.stringify(merged));
       const t = setTimeout(() => {
         router.push(`/${locale}/design/${designId}?style=${style}`);
         dismiss();
       }, 700);
       return () => clearTimeout(t);
     }
-  }, [status, result, locale, router, dismiss]);
+  }, [status, result, locale, router, dismiss, originalPreview]);
 
   if (!jobId || status === null) return null;
 

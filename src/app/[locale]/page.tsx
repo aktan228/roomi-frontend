@@ -134,7 +134,8 @@ export default function UploadPage() {
 
       if (!job) throw new Error("Backend unavailable");
 
-      startJob(job.job_id);
+      // Pass the uploaded photo through as the "before" image
+      startJob(job.job_id, previewUrl ?? URL.createObjectURL(file));
       // DesignProgress (in AppShell) shows the floating panel and polls;
       // the user can navigate freely while it runs
     } catch (err) {
