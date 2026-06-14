@@ -111,6 +111,15 @@ export function DesignProgress() {
             Можно свернуть и пользоваться приложением — дизайн продолжит создаваться
           </p>
         )}
+
+        {isError && (
+          <button
+            onClick={() => { dismiss(); router.push(`/${locale}`); }}
+            className="w-full border-t border-border px-4 py-2 text-center text-[11px] font-semibold text-coral transition hover:bg-coral/5"
+          >
+            {locale === "ru" ? "Попробовать снова" : "Try again"}
+          </button>
+        )}
       </div>
     </>
   );

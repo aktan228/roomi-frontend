@@ -10,6 +10,7 @@ import { useSelectedStyle } from "@/lib/useSelectedStyle";
 import { STYLES } from "@/lib/styles";
 import { startRedesign } from "@/lib/api";
 import { useDesignJob } from "@/lib/design-job";
+import { fileToThumbDataUrl } from "@/lib/image";
 import { useDictionary } from "@/components/DictionaryProvider";
 
 // Room types
@@ -134,8 +135,11 @@ export default function UploadPage() {
 
       if (!job) throw new Error("Backend unavailable");
 
-      // Pass the uploaded photo through as the "before" image
-      startJob(job.job_id, previewUrl ?? URL.createObjectURL(file));
+      // Pass the uploaded photo through as the "before" image — a downscaled
+      // data URL so it persists in the gallery after reload (blob: URLs don't).
+      let before = previewUrl ?? URL.createObjectURL(file);
+      try { before = await fileToThumbDataUrl(file); } catch { /* keep blob URL */ }
+      startJob(job.job_id, before);
       // DesignProgress (in AppShell) shows the floating panel and polls;
       // the user can navigate freely while it runs
     } catch (err) {

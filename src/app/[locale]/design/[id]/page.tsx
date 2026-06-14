@@ -112,10 +112,91 @@ export default function DesignResultPage() {
             <Loader2 className="animate-spin text-muted" size={32} />
           </div>
         )}
-        {design?.is_mock && (
-          <p className="mt-2 text-center text-xs text-muted">{dict.result.mockNotice}</p>
+        {design && (
+          <div className="mt-2 flex justify-center">
+            <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+              design.is_mock ? "bg-card text-muted" : "bg-green-500/10 text-green-600"
+            }`}>
+              {design.is_mock ? dict.result.demoPreview : dict.result.aiGenerated}
+            </span>
+          </div>
         )}
       </div>
+
+      {/* AI room review — what the perception pipeline detected */}
+      {design?.analysis && (
+        <div className="mt-4 rounded-3xl border border-border bg-card/40 p-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold">{dict.result.analysisTitle}</h2>
+            <span className="rounded-full bg-coral/10 px-2 py-0.5 text-[10px] font-semibold text-coral">
+              {design.analysis.is_stub ? dict.result.estimate : dict.result.aiAnalysis}
+            </span>
+          </div>
+
+          {/* Area + surfaces */}
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="rounded-2xl bg-background p-3">
+              <p className="text-[11px] text-muted">{dict.result.area}</p>
+              <p className="mt-0.5 text-sm font-bold">
+                {design.analysis.est_area_m2} {locale === "ru" ? "м²" : "m²"}
+                <span className="font-normal text-muted"> · {design.analysis.ceiling_height_m} {locale === "ru" ? "м" : "m"}</span>
+              </p>
+            </div>
+            <div className="rounded-2xl bg-background p-3">
+              <p className="text-[11px] text-muted">{dict.result.surfaces}</p>
+              <p className="mt-0.5 text-sm font-bold">
+                {design.analysis.surfaces.wall_m2} {locale === "ru" ? "м²" : "m²"}
+                <span className="font-normal text-muted"> · {locale === "ru" ? "стены" : "walls"}</span>
+              </p>
+            </div>
+          </div>
+
+          {/* Detected objects */}
+          {design.analysis.objects.length > 0 && (
+            <div className="mt-3">
+              <p className="mb-1.5 text-[11px] text-muted">{dict.result.detected}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {design.analysis.objects.map((o, i) => (
+                  <span
+                    key={i}
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-medium capitalize ${
+                      o.suggestion === "replace" ? "bg-coral/10 text-coral" : "bg-background text-muted"
+                    }`}
+                  >
+                    {o.label}
+                    {o.suggestion === "replace" && ` · ${dict.result.replace}`}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Palette + lighting */}
+          <div className="mt-3 flex items-end justify-between">
+            {design.analysis.palette.length > 0 && (
+              <div>
+                <p className="mb-1.5 text-[11px] text-muted">{dict.result.palette}</p>
+                <div className="flex gap-1.5">
+                  {design.analysis.palette.map((hex, i) => (
+                    <span
+                      key={i}
+                      className="h-6 w-6 rounded-full border border-border"
+                      style={{ background: hex }}
+                      title={hex}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="text-right">
+              <p className="mb-1.5 text-[11px] text-muted">{dict.result.lighting}</p>
+              <p className="text-xs font-semibold">
+                {design.analysis.lighting === "dim" ? dict.result.lightingDim : dict.result.lightingBright}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Ask AI + Download */}
       <div className="mt-4 flex gap-2">

@@ -14,6 +14,10 @@ export type Dictionary = {
     title: string; mockNotice: string; shoppingList: string; renoPlan: string;
     totalBudget: string; buy: string; weeksTotal: string; week: string;
     askAi: string; download: string;
+    analysisTitle: string; detected: string; area: string; surfaces: string;
+    palette: string; lighting: string; lightingDim: string; lightingBright: string;
+    estimate: string; aiAnalysis: string; aiGenerated: string; demoPreview: string;
+    aiEstimate: string; keep: string; replace: string;
   };
   gallery: { title: string; subtitle: string; empty: string; emptyHint: string };
   chat: {
@@ -72,6 +76,21 @@ const ru: Dictionary = {
     week: "Неделя",
     askAi: "Спросить AI об этом дизайне",
     download: "Скачать дизайн",
+    analysisTitle: "Что увидел AI",
+    detected: "Распознано в комнате",
+    area: "Площадь",
+    surfaces: "Поверхности",
+    palette: "Палитра",
+    lighting: "Освещение",
+    lightingDim: "приглушённое",
+    lightingBright: "яркое",
+    estimate: "оценка",
+    aiAnalysis: "AI-анализ",
+    aiGenerated: "AI-генерация",
+    demoPreview: "демо-превью",
+    aiEstimate: "AI-смета",
+    keep: "оставить",
+    replace: "заменить",
   },
   gallery: {
     title: "Галерея",
